@@ -43,7 +43,7 @@ function cycleNotation(p){
             continue
         }
         const cycle = []
-        const y = x 
+        let y = x 
         while (!visit[y]){
             visit[y] = true 
             cycle.push(y + 1)
@@ -57,7 +57,7 @@ function cycleNotation(p){
     }
 
     if (cycles.length == 0){
-        return 
+        return "e"
     }
 
     return cycles.join("")
@@ -65,11 +65,47 @@ function cycleNotation(p){
 }
 
 function generateS4(){
+    const result = []
+    function perm(arr, start){
+        if (start == arr.length){
+            result.push([...arr])
+            return
+        }
 
+        for (let x = start; x < arr.length; x++) {
+            // swap
+            let temp = arr[start]
+            arr[start] = arr[x]
+            arr[x] = temp
 
+            perm(arr, start + 1)
+
+            // swap back
+            let temp2 = arr[start]
+            arr[start] = arr[x]
+            arr[x] = temp2
+        }
+    }
+
+    perm([0, 1, 2, 3], 0)
+    return result
 }
 
-function randoTargetPerm(){
 
+
+
+
+function randoTargetPerm(){
+    const all = generateS4()
+    const identity = [0, 1, 2, 3]
+    let pick
+
+    // keep picking until we get something that isn't the identity
+    do {
+        const index = Math.floor(Math.random() * all.length)
+        pick = all[index]
+    } while (permsAreEqual(pick, identity))
+
+    return pick
 
 }
