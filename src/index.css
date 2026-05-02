@@ -1,10 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=JetBrains+Mono:wght@400;600&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap');
 
 :root {
-  --bg: #080c18;
-  --bg2: #0f1528;
+  --bg: #282741;
+  --bg2: #1f495a;
   --bg3: #161d35;
-  --card-bg: #1a2040;
+  --card-bg: #64084d;
   --border: #283c89;
   --gold: #be9810;
   --gold2: #c09925;
