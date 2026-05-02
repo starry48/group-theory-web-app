@@ -62,4 +62,5 @@ export default function App() {
       </div>
       {showMathPanel && <MathPanel onClose={() => setShowMathPanel(false)} />}
     </div>
-  )}
+  )
+}
