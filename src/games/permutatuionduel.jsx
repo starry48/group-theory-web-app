@@ -55,7 +55,7 @@ export default function PermutationDuel({ onSidebarUpdate }) {
   }, [])
 
   const init = useCallback(() => {
-    const target = randomTargetPerm(allPerms)
+    const target = randoTargetPerm(allPerms)
     setTargetPerm(target)
     dealHands(allPerms)
     setCurrentProduct(IDENTITY)
@@ -73,7 +73,7 @@ export default function PermutationDuel({ onSidebarUpdate }) {
       currentProduct,
       targetPerm,
       productNotation: cycleNotation(currentProduct),
-      order: orderOfPerm(currentProduct)
+      order: orderofPerm(currentProduct)
     })
   }, [currentProduct, targetPerm])
 
@@ -94,7 +94,7 @@ export default function PermutationDuel({ onSidebarUpdate }) {
       setCurrentProduct(newProduct)
       setPlayedCards(p => [{ perm: card, player: "ai", notation: cycleNotation(card) }, ...p])
 
-      if (permsAreEqual(newProduct, targetPerm)) {
+      if (permAreEqual(newProduct, targetPerm)) {
         setGameOver(true)
         setWinner("ai")
         setMessage("AI reached the target first! Better luck next time.")
@@ -114,7 +114,7 @@ export default function PermutationDuel({ onSidebarUpdate }) {
     setCurrentProduct(newProduct)
     setPlayedCards(p => [{ perm: card, player: "you", notation: cycleNotation(card) }, ...p])
 
-    if (permsAreEqual(newProduct, targetPerm)) {
+    if (permAreEqual(newProduct, targetPerm)) {
       setGameOver(true)
       setWinner("player")
       setMessage("🎉 You reached the target! You win!")
