@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
-import { generateS4, composePerm, cycleNotation, orderOfPerm, permsAreEqual, randomTargetPerm } from "../../utils/permutations.js"
+import { generateS4, composePerm, cycleNotation, orderOfPerm, permsAreEqual, randomTargetPerm } from "../../utils/permutation.js"
 
 const IDENTITY = [0, 1, 2, 3]
 const SUIT_LABELS = ["♠", "♥", "♦", "♣"]

@@ -92,9 +92,6 @@ function generateS4(){
 }
 
 
-
-
-
 function randoTargetPerm(){
     const all = generateS4()
     const identity = [0, 1, 2, 3]
