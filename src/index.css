@@ -5,18 +5,18 @@
   --bg2: #0f1528;
   --bg3: #161d35;
   --card-bg: #1a2040;
-  --border: #2a3560;
-  --gold: #e8c547;
-  --gold2: #f5d76e;
-  --cyan: #00c8e0;
-  --red: #e05555;
-  --green: #4ec994;
-  --purple: #a855f7;
+  --border: #283c89;
+  --gold: #be9810;
+  --gold2: #c09925;
+  --cyan: #002ea2;
+  --red: #990000ca;
+  --green: #138b00;
+  --purple: #71049f;
   --text: #e8e4d9;
   --text2: #8a90a8;
-  --font-display: 'Playfair Display', serif;
-  --font-mono: 'JetBrains Mono', monospace;
-  --font-body: 'Crimson Pro', serif;
+  --font-display: 'Times New Roman', serif;
+  --font-mono: 'Cabin', serif;
+  --font-body: 'Rubik', serif;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
