@@ -1,0 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=JetBrains+Mono:wght@400;600&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap');
+
+:root {
+  --bg: #080c18;
+  --bg2: #0f1528;
+  --bg3: #161d35;
+  --card-bg: #1a2040;
+  --border: #2a3560;
+  --gold: #e8c547;
+  --gold2: #f5d76e;
+  --cyan: #00c8e0;
+  --red: #e05555;
+  --green: #4ec994;
+  --purple: #a855f7;
+  --text: #e8e4d9;
+  --text2: #8a90a8;
+  --font-display: 'Playfair Display', serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-body: 'Crimson Pro', serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  font-family: var(--font-body);
+  transition: all 0.2s ease;
+}
+
+button:hover { opacity: 0.85; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
