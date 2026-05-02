@@ -101,8 +101,9 @@ function randoTargetPerm(){
     do {
         const index = Math.floor(Math.random() * all.length)
         pick = all[index]
-    } while (permsAreEqual(pick, identity))
+    } while (permAreEqual(pick, identity))
 
     return pick
 
-}
+}-e 
+export { composePerm, invertPerm, orderofPerm, permAreEqual, cycleNotation, generateS4, randoTargetPerm }
