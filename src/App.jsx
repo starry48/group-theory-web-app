@@ -1,5 +1,5 @@
 import { useState } from "react"
-import HomeScreen from "./components/homeScreen"
+import HomeScreen from "./components/homescreen"
 import Sidebar from "./components/sidebar"
 import MathPanel from "./components/mathpanel"
 import SETGame from "./games/setGame"
