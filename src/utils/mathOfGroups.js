@@ -60,35 +60,60 @@ function d4Subgroup(){
 
 
 function leftCoset(g, subgroup, groupOp){
-
+    return subgroup.map(h => groupOp(g, h))
 
 }
 
 
 function cosetPart(groupElm, subgroup, groupOp){
+    let remaining = [...groupElements]  
+    const cosets = []
 
+    while (remaining.length > 0) {
+        const g = remaining[0]                          
+        const coset = leftCoset(g, subgroup, groupOp) 
+        cosets.push(coset)
+        remaining = remaining.filter(x => !coset.includes(x))
+    }
+
+    return cosets
 
 }
 
 
 function xorAll(pile){
-
-
+    return piles.reduce((acc, pile) => acc ^ pile, 0)
 }
 
-function toBin(n, minBits = 4){
-
-
+function toBinar(n, minBits = 4){
+     return n.toString(2).padStart(minBits, "0")
 }
 
 
 function nimOpt(pile){
+    const xorSum = xorAll(piles)
+    if (xorSum === 0) return null
 
-
+    for (let i = 0; i < piles.length; i++) {
+        const target = piles[i] ^ xorSum   // what this pile should become
+        if (target < piles[i]) {            // only valid if we're removing stones
+            return {
+                pileIndex: i,
+                removeAmount: piles[i] - target
+            }
+        }
+    }
 }
 
 
 function buildCayleyTable(element, operation){
-
-
+    const table = []
+    for (let i = 0; i < elements.length; i++) {
+        const row = []
+        for (let j = 0; j < elements.length; j++) {
+            row.push(operation(elements[i], elements[j]))
+        }
+        table.push(row)
+    }
+    return table
 }
