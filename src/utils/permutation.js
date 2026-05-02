@@ -105,5 +105,5 @@ function randoTargetPerm(){
 
     return pick
 
-}-e 
+} 
 export { composePerm, invertPerm, orderofPerm, permAreEqual, cycleNotation, generateS4, randoTargetPerm }
