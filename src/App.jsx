@@ -1,11 +1,11 @@
 import { useState } from "react"
-import HomeScreen from "./components/HomeScreen/HomeScreen"
-import Sidebar from "./components/Sidebar/Sidebar"
-import MathPanel from "./components/MathPanel/MathPanel"
-import SETGame from "./games/SET/SETGame"
-import PermutationDuel from "./games/PermutationDuel/PermutationDuel"
-import CosetCapture from "./games/CosetCapture/CosetCapture"
-import NimGame from "./games/Nim/NimGame"
+import HomeScreen from "./components/homeScreen"
+import Sidebar from "./components/sidebar"
+import MathPanel from "./components/mathpanel"
+import SETGame from "./games/setGame"
+import PermutationDuel from "./games/permutatuionduel"
+import CosetCapture from "./games/cosetcapture"
+import NimGame from "./games/nim"
 import "./index.css"
 
 export default function App() {
