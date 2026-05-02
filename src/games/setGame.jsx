@@ -91,6 +91,7 @@ export default function SETGame({ onSidebarUpdate }) {
   const [msgColor, setMsgColor] = useState("var(--text)")
   const [hint, setHint] = useState(null)
   const [lastResult, setLastResult] = useState(null)
+  const [showNoSetPopup, setShowNoSetPopup] = useState(false)
 
   const init = useCallback(() => {
     const d = shuffle(generateDeck())
@@ -101,7 +102,15 @@ export default function SETGame({ onSidebarUpdate }) {
     setMessage("Find a SET! Select 3 cards.")
     setHint(null)
     setLastResult(null)
+    setShowNoSetPopup(false)
   }, [])
+
+  // After board changes, check if any SET exists — if not, show popup
+  useEffect(() => {
+    if (board.length === 0) return
+    const hasSet = findHint(board) !== null
+    if (!hasSet) setShowNoSetPopup(true)
+  }, [board])
 
   useEffect(() => { init() }, [init])
 
@@ -154,7 +163,7 @@ export default function SETGame({ onSidebarUpdate }) {
   const handleHint = () => {
     const h = findHint(board)
     if (h) { setHint(h); setMessage("Hint shown in orange") }
-    else setMessage("No SET on board — add more cards?")
+    else setMessage("No SET on board — try reshuffling!")
   }
 
   const handleShuffle = () => {
@@ -164,8 +173,70 @@ export default function SETGame({ onSidebarUpdate }) {
     setMessage("Board shuffled!")
   }
 
+  // Combines board + remaining deck, reshuffles, redeals — score is kept
+  const handleReshuffle = () => {
+    const combined = shuffle([...board, ...deck])
+    setBoard(combined.slice(0, 12))
+    setDeck(combined.slice(12))
+    setSelected([])
+    setHint(null)
+    setShowNoSetPopup(false)
+    setMessage("Cards reshuffled — find a SET!")
+    setMsgColor("var(--cyan)")
+  }
+
   return (
     <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+
+      {/* No SET popup */}
+      {showNoSetPopup && (
+        <div style={{
+          position: "fixed", inset: 0, background: "#000b",
+          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 300
+        }}>
+          <div style={{
+            background: "var(--bg2)", border: "1px solid var(--gold)",
+            borderRadius: "14px", padding: "2rem", maxWidth: "400px", width: "90%",
+            textAlign: "center", boxShadow: "0 0 40px var(--gold)33"
+          }}>
+            <div style={{ fontSize: "2rem", marginBottom: "0.75rem" }}>🔀</div>
+            <h3 style={{
+              fontFamily: "var(--font-display)", color: "var(--gold)",
+              fontSize: "1.4rem", marginBottom: "0.75rem"
+            }}>No Valid SETs!</h3>
+            <p style={{
+              color: "var(--text2)", fontSize: "0.95rem",
+              marginBottom: "1.5rem", lineHeight: 1.6
+            }}>
+              There are no valid SETs on the board right now.
+              Your score is safe — all unused cards from the board
+              and deck will be reshuffled and redealt.
+            </p>
+            <div style={{
+              background: "var(--bg3)", border: "1px solid var(--border)",
+              borderRadius: "8px", padding: "0.6rem 1rem", marginBottom: "1.5rem",
+              fontFamily: "var(--font-mono)", fontSize: "0.8rem", color: "var(--text2)"
+            }}>
+              Cards to reshuffle: {board.length + deck.length} &nbsp;|&nbsp; Score kept: {score}
+            </div>
+            <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center" }}>
+              <button onClick={handleReshuffle} style={{
+                background: "var(--gold)", color: "#000",
+                fontFamily: "var(--font-display)", fontWeight: "700",
+                fontSize: "1rem", padding: "0.6rem 1.4rem",
+                borderRadius: "8px", border: "none"
+              }}>Reshuffle Cards</button>
+              <button onClick={() => setShowNoSetPopup(false)} style={{
+                background: "transparent", color: "var(--text2)",
+                fontFamily: "var(--font-mono)", fontSize: "0.85rem",
+                padding: "0.6rem 1rem", borderRadius: "8px",
+                border: "1px solid var(--border)"
+              }}>Dismiss</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
         <div>
           <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.8rem", color: "var(--text)" }}>SET</h2>
