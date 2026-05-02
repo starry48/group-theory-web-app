@@ -17,9 +17,9 @@ function invertPerm(p){
 
 
 function orderofPerm(p){
-    const curr = [...p]
+    let curr = [...p]
     const iden = [0, 1, 2, 3]
-    const count = 1 
+    let count = 1 
     while (!permAreEqual(curr, iden)){
         curr = composePerm(curr, p)
         count++

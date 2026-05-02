@@ -63,7 +63,7 @@ function SetCard({ card, selected, hinted, onClick }) {
   return (
     <div onClick={onClick} style={{
       background: selected ? "var(--bg3)" : "var(--card-bg)",
-      border: `2px solid ${selected ? "var(--gold)" : hinted ? "var(--cyan)" : "var(--border)"}`,
+      border: `2px solid ${selected ? "var(--gold)" : hinted ? "#f97316" : "var(--border)"}`,
       borderRadius: "10px", padding: "0.75rem 0.5rem",
       cursor: "pointer", transition: "all 0.15s ease",
       display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem",
@@ -153,8 +153,15 @@ export default function SETGame({ onSidebarUpdate }) {
 
   const handleHint = () => {
     const h = findHint(board)
-    if (h) { setHint(h); setMessage("Hint shown in blue") }
+    if (h) { setHint(h); setMessage("Hint shown in orange") }
     else setMessage("No SET on board — add more cards?")
+  }
+
+  const handleShuffle = () => {
+    setBoard(shuffle(board))
+    setSelected([])
+    setHint(null)
+    setMessage("Board shuffled!")
   }
 
   return (
@@ -173,9 +180,13 @@ export default function SETGame({ onSidebarUpdate }) {
             Score: {score}
           </div>
           <button onClick={handleHint} style={{
-            background: "var(--bg3)", color: "var(--cyan)", border: "1px solid var(--cyan)",
+            background: "var(--bg3)", color: "#f97316", border: "1px solid #f97316",
             borderRadius: "8px", padding: "0.4rem 0.8rem", fontFamily: "var(--font-mono)", fontSize: "0.85rem"
           }}>Hint</button>
+          <button onClick={handleShuffle} style={{
+            background: "var(--bg3)", color: "var(--purple)", border: "1px solid var(--purple)",
+            borderRadius: "8px", padding: "0.4rem 0.8rem", fontFamily: "var(--font-mono)", fontSize: "0.85rem"
+          }}>Shuffle</button>
           <button onClick={init} style={{
             background: "var(--bg3)", color: "var(--text2)", border: "1px solid var(--border)",
             borderRadius: "8px", padding: "0.4rem 0.8rem", fontFamily: "var(--font-mono)", fontSize: "0.85rem"
