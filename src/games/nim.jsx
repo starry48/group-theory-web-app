@@ -54,7 +54,7 @@ export default function NimGame({ onSidebarUpdate }) {
   useEffect(() => {
     if (currentPlayer !== "ai" || gameOver) return
     const timer = setTimeout(() => {
-      const move = nimOptimalMove(piles)
+      const move = nimOpt(piles)
       let newPiles
       let explanation
 
@@ -101,7 +101,7 @@ export default function NimGame({ onSidebarUpdate }) {
   }
 
   const handleTeachMe = () => {
-    const move = nimOptimalMove(piles)
+    const move = nimOpt(piles)
     if (!move) {
       setTeachHint("You're in a losing position — any move you make gives the AI a win with perfect play. Take 1 from any pile.")
     } else {
@@ -178,14 +178,14 @@ export default function NimGame({ onSidebarUpdate }) {
             <span style={{ color: "var(--text2)", minWidth: "60px" }}>Pile {i + 1}:</span>
             <span style={{ color: "var(--text)", minWidth: "20px" }}>{p}</span>
             <span style={{ color: "var(--text2)" }}>=</span>
-            <span style={{ color: "var(--cyan)" }}>{toBinary(p, bits)}</span>
+            <span style={{ color: "var(--cyan)" }}>{toBinar(p, bits)}</span>
           </div>
         ))}
         <div style={{ borderTop: "1px solid var(--border)", marginTop: "0.5rem", paddingTop: "0.5rem", display: "flex", gap: "1rem", alignItems: "center" }}>
           <span style={{ color: "var(--text2)", minWidth: "60px" }}>XOR:</span>
           <span style={{ color: "var(--text)", minWidth: "20px" }}>{xorValue}</span>
           <span style={{ color: "var(--text2)" }}>=</span>
-          <span style={{ color: xorValue === 0 ? "var(--red)" : "var(--green)" }}>{toBinary(xorValue, bits)}</span>
+          <span style={{ color: xorValue === 0 ? "var(--red)" : "var(--green)" }}>{toBinar(xorValue, bits)}</span>
           <span style={{ marginLeft: "0.5rem", color: xorValue === 0 ? "var(--red)" : "var(--green)" }}>
             {xorValue === 0 ? "← LOSING" : "← WINNING"}
           </span>

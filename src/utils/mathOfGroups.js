@@ -66,7 +66,7 @@ function leftCoset(g, subgroup, groupOp){
 
 
 export function cosetPart(groupElm, subgroup, groupOp){
-    let remaining = [...groupElements]  
+    let remaining = [...groupElm]  
     const cosets = []
 
     while (remaining.length > 0) {
