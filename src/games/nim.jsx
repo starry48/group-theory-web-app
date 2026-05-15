@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
-import { xorAll, nimOpt, toBinar } from "../../utils/mathOfGroups.js"
+import { xorAll, nimOpt, toBinar } from "../utils/mathOfGroups.js"
 
 const INITIAL_PILES = [3, 5, 7]
 
