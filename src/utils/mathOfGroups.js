@@ -81,16 +81,16 @@ function cosetPart(groupElm, subgroup, groupOp){
 }
 
 
-function xorAll(pile){
+export function xorAll(pile){
     return piles.reduce((acc, pile) => acc ^ pile, 0)
 }
 
-function toBinar(n, minBits = 4){
+export function toBinar(n, minBits = 4){
      return n.toString(2).padStart(minBits, "0")
 }
 
 
-function nimOpt(pile){
+export function nimOpt(pile){
     const xorSum = xorAll(piles)
     if (xorSum === 0) return null
 
