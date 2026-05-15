@@ -82,7 +82,7 @@ function cosetPart(groupElm, subgroup, groupOp){
 
 
 export function xorAll(pile){
-    return piles.reduce((acc, pile) => acc ^ pile, 0)
+    return pile.reduce((acc, pile) => acc ^ pile, 0)
 }
 
 export function toBinar(n, minBits = 4){
@@ -91,15 +91,15 @@ export function toBinar(n, minBits = 4){
 
 
 export function nimOpt(pile){
-    const xorSum = xorAll(piles)
+    const xorSum = xorAll(pile)
     if (xorSum === 0) return null
 
-    for (let i = 0; i < piles.length; i++) {
-        const target = piles[i] ^ xorSum   // what this pile should become
-        if (target < piles[i]) {            // only valid if we're removing stones
+    for (let i = 0; i < pile.length; i++) {
+        const target = pile[i] ^ xorSum   // what this pile should become
+        if (target < pile[i]) {            // only valid if we're removing stones
             return {
                 pileIndex: i,
-                removeAmount: piles[i] - target
+                removeAmount: pile[i] - target
             }
         }
     }
