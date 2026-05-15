@@ -25,7 +25,7 @@ export function z12Subgroup(divisor){
 }
 
 // elements: r0=identity, r1=90°, r2=180°, r3=270°, s0=horiz, s1=vert, s2=diag, s3=antidiag
-const D4_ELEMENTS = ["r0", "r1", "r2", "r3", "s0", "s1", "s2", "s3"]
+export const D4_ELEMENTS = ["r0", "r1", "r2", "r3", "s0", "s1", "s2", "s3"]
 //precomputed mult table for d4
 const D4_TABLE = {
     r0: { r0:"r0", r1:"r1", r2:"r2", r3:"r3", s0:"s0", s1:"s1", s2:"s2", s3:"s3" },
