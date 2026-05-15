@@ -8,12 +8,12 @@ function modMul(a, b, mod){
 }
 
 
-function z12Add(a, b){
+export function z12Add(a, b){
     return (a + b) % 12
 }
 
 
-function z12Subgroup(divisor){
+export function z12Subgroup(divisor){
     const subgroup = []
     const step = 12 / index
     
@@ -38,11 +38,11 @@ const D4_TABLE = {
     s3: { r0:"s3", r1:"s1", r2:"s2", r3:"s0", s0:"r1", s1:"r3", s2:"r2", s3:"r0" },
 }
 
-function d4Mult(a, b){
+export function d4Mult(a, b){
     return D4_TABLE[a][b]
 }
 
-function d4Subgroup(){
+export function d4Subgroup(){
      return [
         ["r0"],                               // trivial subgroup, order 1
         ["r0", "r2"],                         // order 2 — 180° rotation
@@ -65,7 +65,7 @@ function leftCoset(g, subgroup, groupOp){
 }
 
 
-function cosetPart(groupElm, subgroup, groupOp){
+export function cosetPart(groupElm, subgroup, groupOp){
     let remaining = [...groupElements]  
     const cosets = []
 
