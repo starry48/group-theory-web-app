@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import HomeScreen from "./components/homescreen"
 import Sidebar from "./components/sidebar"
 import MathPanel from "./components/mathpanel"
@@ -8,10 +8,23 @@ import CosetCapture from "./games/cosetcapture"
 import NimGame from "./games/nim"
 import "./index.css"
 
+function useTheme() {
+  const [theme, setTheme] = useState(() => localStorage.getItem("gt-theme") || "dark")
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme)
+    localStorage.setItem("gt-theme", theme)
+  }, [theme])
+
+  const toggle = () => setTheme(t => t === "dark" ? "light" : "dark")
+  return [theme, toggle]
+}
+
 export default function App() {
   const [currentMode, setCurrentMode] = useState(null)
   const [showMathPanel, setShowMathPanel] = useState(false)
   const [sidebarInfo, setSidebarInfo] = useState({})
+  const [theme, toggleTheme] = useTheme()
 
   const handleHome = () => { setCurrentMode(null); setSidebarInfo({}) }
 
@@ -33,7 +46,7 @@ export default function App() {
     Nim: "Nim — (ℤ₂)ⁿ"
   }
 
-  if (currentMode === null) return <HomeScreen onSelectMode={setCurrentMode} />
+  if (currentMode === null) return <HomeScreen onSelectMode={setCurrentMode} theme={theme} onToggleTheme={toggleTheme} />
 
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
@@ -47,15 +60,23 @@ export default function App() {
           fontFamily: "var(--font-mono)", padding: "0.4rem 0.8rem",
           border: "1px solid var(--border)", borderRadius: "6px"
         }}>← Home</button>
+
         <span style={{ fontFamily: "var(--font-display)", color: "var(--gold)", fontSize: "1.1rem" }}>
           {modeLabels[currentMode]}
         </span>
-        <button onClick={() => setShowMathPanel(true)} style={{
-          background: "transparent", color: "var(--cyan)", fontSize: "0.9rem",
-          fontFamily: "var(--font-mono)", padding: "0.4rem 0.8rem",
-          border: "1px solid var(--cyan)", borderRadius: "6px"
-        }}>∑ Math Reference</button>
+
+        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+          <button className="theme-toggle" onClick={toggleTheme}>
+            {theme === "dark" ? "☀️ Day" : "🌙 Night"}
+          </button>
+          <button onClick={() => setShowMathPanel(true)} style={{
+            background: "transparent", color: "var(--cyan)", fontSize: "0.9rem",
+            fontFamily: "var(--font-mono)", padding: "0.4rem 0.8rem",
+            border: "1px solid var(--cyan)", borderRadius: "6px"
+          }}>∑ Math Reference</button>
+        </div>
       </nav>
+
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
         <main style={{ flex: 1, padding: "2rem", overflowY: "auto" }}>{renderGame()}</main>
         <Sidebar mode={currentMode} extraInfo={sidebarInfo} />

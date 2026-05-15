@@ -1,24 +1,53 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=JetBrains+Mono:wght@400;600&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap');
 
-:root {
-  --bg: #282741;
-  --bg2: #1f495a;
-  --bg3: #161d35;
-  --card-bg: #64084d;
-  --border: #283c89;
-  --gold: #be9810;
-  --gold2: #c09925;
-  --cyan: #002ea2;
-  --red: #990000ca;
-  --green: #138b00;
-  --purple: #71049f;
-  --text: #e8e4d9;
-  --text2: #8a90a8;
+/* ── DARK MODE (default) */
+:root,
+[data-theme="dark"] {
+  --bg:       #0e0a1a;
+  --bg2:      #1a1030;
+  --bg3:      #120d24;
+  --card-bg:  #1e0f38;
+  --border:   #3a1a6e;
+
+  --gold:     #F0A202;
+  --gold2:    #c98700;
+  --cyan:     #51E5FF;
+  --red:      #EC368D;
+  --green:    #2dc9b0;
+  --purple:   #9b59d0;
+
+  --text:     #e8e4f5;
+  --text2:    #8a7aaa;
+
   --font-display: 'Times New Roman', serif;
-  --font-mono: 'Cabin', serif;
-  --font-body: 'Rubik', serif;
+  --font-mono:    'Cabin', serif;
+  --font-body:    'Rubik', serif;
 }
 
+/*LIGHT MODE */
+[data-theme="light"] {
+  --bg:       #f0f7ff;
+  --bg2:      #e0d8f8;
+  --bg3:      #f7f0fb;
+  --card-bg:  #ffffff;
+  --border:   #c9b8e8;
+
+  --gold:     #b87800;
+  --gold2:    #9a6500;
+  --cyan:     #0077a8;
+  --red:      #c4005f;
+  --green:    #0d5c53;
+  --purple:   #440381;
+
+  --text:     #1a0f2e;
+  --text2:    #5a4a7a;
+
+  --font-display: 'Times New Roman', serif;
+  --font-mono:    'Cabin', serif;
+  --font-body:    'Rubik', serif;
+}
+
+/*  RESET & BASE */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -27,6 +56,7 @@ body {
   font-family: var(--font-body);
   font-size: 1.05rem;
   line-height: 1.6;
+  transition: background 0.25s ease, color 0.25s ease;
 }
 
 button {
@@ -41,3 +71,16 @@ button:hover { opacity: 0.85; }
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg2); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.theme-toggle {
+  background: var(--bg3);
+  border: 1px solid var(--border) !important;
+  border-radius: 20px !important;
+  padding: 0.35rem 0.8rem !important;
+  font-size: 0.85rem !important;
+  color: var(--text2) !important;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-mono) !important;
+}

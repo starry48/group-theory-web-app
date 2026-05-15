@@ -39,11 +39,19 @@ const modes = [
   }
 ]
 
-export default function HomeScreen({ onSelectMode }) {
+export default function HomeScreen({ onSelectMode, theme, onToggleTheme }) {
   const [hovered, setHovered] = useState(null)
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", padding: "3rem 2rem" }}>
+
+      {/* Theme toggle top-right */}
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "1rem" }}>
+        <button className="theme-toggle" onClick={onToggleTheme}>
+          {theme === "dark" ? "☀️ Day mode" : "🌙 Night mode"}
+        </button>
+      </div>
+
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: "3.5rem" }}>
         <div style={{
@@ -88,11 +96,10 @@ export default function HomeScreen({ onSelectMode }) {
               borderRadius: "12px", padding: "1.75rem",
               transition: "all 0.25s ease",
               transform: hovered === mode.id ? "translateY(-4px)" : "none",
-              boxShadow: hovered === mode.id ? `0 8px 30px ${mode.color}22` : "none",
+              boxShadow: hovered === mode.id ? `0 8px 30px ${mode.color}33` : "none",
               display: "flex", flexDirection: "column", gap: "1rem"
             }}
           >
-            {/* Symbol + title */}
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
               <div>
                 <h2 style={{
@@ -113,10 +120,9 @@ export default function HomeScreen({ onSelectMode }) {
               {mode.description}
             </p>
 
-            {/* Concept tag */}
             <div style={{
               fontSize: "0.75rem", fontFamily: "var(--font-mono)",
-              color: mode.color, background: `${mode.color}15`,
+              color: mode.color, background: `${mode.color}18`,
               padding: "0.3rem 0.6rem", borderRadius: "4px",
               display: "inline-block", alignSelf: "flex-start"
             }}>
@@ -126,7 +132,8 @@ export default function HomeScreen({ onSelectMode }) {
             <button
               onClick={() => onSelectMode(mode.id)}
               style={{
-                background: mode.color, color: "#000",
+                background: mode.color,
+                color: mode.color === "var(--gold)" || mode.color === "var(--cyan)" ? "#000" : "#fff",
                 fontFamily: "var(--font-display)", fontWeight: "700",
                 fontSize: "1rem", padding: "0.7rem 1.2rem",
                 borderRadius: "8px", width: "100%", marginTop: "0.5rem"
@@ -138,7 +145,6 @@ export default function HomeScreen({ onSelectMode }) {
         ))}
       </div>
 
-      {/* References */}
       <References />
     </div>
   )
