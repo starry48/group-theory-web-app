@@ -15,7 +15,7 @@ export function z12Add(a, b){
 
 export function z12Subgroup(divisor){
     const subgroup = []
-    const step = 12 / index
+    const step = 12 / divisor
     
     for (let i = 0; i < 12; i += step) {
         subgroup.push(i)
@@ -108,10 +108,10 @@ export function nimOpt(pile){
 
 function buildCayleyTable(element, operation){
     const table = []
-    for (let i = 0; i < elements.length; i++) {
+    for (let i = 0; i < element.length; i++) {
         const row = []
-        for (let j = 0; j < elements.length; j++) {
-            row.push(operation(elements[i], elements[j]))
+        for (let j = 0; j < element.length; j++) {
+            row.push(operation(element[i], element[j]))
         }
         table.push(row)
     }
