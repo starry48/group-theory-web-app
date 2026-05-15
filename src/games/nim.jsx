@@ -21,8 +21,15 @@ export default function NimGame({ onSidebarUpdate }) {
   const bits = Math.max(4, ...piles.map(n => n.toString(2).length))
 
   useEffect(() => {
-    onSidebarUpdate({ piles, xorValue, isLosing })
-  }, [piles, xorValue, isLosing])
+  onSidebarUpdate({
+      piles,
+      xorValue,
+      binary: piles.map(p => p.toString(2)),
+      winningPosition: xorValue !== 0,
+      currentPlayer
+    })
+  }, [piles, xorValue, currentPlayer, onSidebarUpdate])
+
 
   const addLog = (entry) => setLog(l => [entry, ...l].slice(0, 10))
 

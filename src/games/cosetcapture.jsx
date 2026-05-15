@@ -1,5 +1,12 @@
 import { useState, useEffect, useCallback } from "react"
-import { z12Add, z12Subgroup, d4Mult, d4Subgroup, D4_ELEMENTS, cosetPart } from "../utils/mathOfGroups.js"
+import {
+  z12Add,
+  z12Subgroup,
+  d4Mult,
+  d4Subgroup,
+  D4_ELEMENTS,
+  cosetPart
+} from "../utils/mathOfGroups.js"
 
 const Z12_ELEMENTS = Array.from({ length: 12 }, (_, i) => i)
 const COSET_COLORS = ["var(--cyan)", "var(--gold)", "var(--green)", "var(--purple)", "var(--red)", "var(--text)"]
@@ -42,13 +49,17 @@ export default function CosetCapture({ onSidebarUpdate }) {
         label: e => String(e)
       }
     } else {
-      const subs = d4Subgroups()
-      const subgroups = subs.map(s => ({ label: "{" + s.join(", ") + "}", elements: s }))
-      return {
-        elements: D4_ELEMENTS,
-        op: d4Multiply,
-        subgroups,
-        label: e => e
+        const subs = d4Subgroup()
+        const subgroups = subs.map(s => ({
+          label: "{" + s.join(", ") + "}",
+          elements: s
+        }))
+
+        return {
+          elements: D4_ELEMENTS,
+          op: d4Mult,
+          subgroups,
+          label: e => e
       }
     }
   }, [groupMode])
@@ -56,7 +67,7 @@ export default function CosetCapture({ onSidebarUpdate }) {
   const init = useCallback(() => {
     const config = getConfig()
     const subgroup = config.subgroups[subgroupIndex]?.elements || config.subgroups[0].elements
-    const cs = cosetPartition(config.elements, subgroup, config.op)
+    const cs = cosetPart(config.elements, subgroup, config.op)
     setCosets(cs)
 
     // build a map: element → coset index
