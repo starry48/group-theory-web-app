@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
-import { z12Add, z12Subgroup, d4Mult, d4Subgroups, D4_ELEMENTS, cosetPart } from "../utils/mathOfGroup.js"
+import { z12Add, z12Subgroup, d4Mult, d4Subgroups, D4_ELEMENTS, cosetPart } from "../utils/mathOfGroups.js"
 
 const Z12_ELEMENTS = Array.from({ length: 12 }, (_, i) => i)
 const COSET_COLORS = ["var(--cyan)", "var(--gold)", "var(--green)", "var(--purple)", "var(--red)", "var(--text)"]
