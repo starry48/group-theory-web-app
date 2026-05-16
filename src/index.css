@@ -26,11 +26,11 @@
 
 /*LIGHT MODE */
 [data-theme="light"] {
-  --bg:       #ffc5e3;
-  --bg2:      #eda4ce;
-  --bg3:      #fd87ca;
-  --card-bg:  #ffc1f2;
-  --border:   #b05888;
+  --bg:       #fdf3f7;
+  --bg2:      #f9e6ef;
+  --bg3:      #f3d6e6;
+  --card-bg:  #fce8f4;
+  --border:   #d9a0be;
 
   --gold:     #b87800;
   --gold2:    #9a6500;

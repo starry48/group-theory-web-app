@@ -93,6 +93,7 @@ export default function SETGame({ onSidebarUpdate }) {
   const [hint, setHint] = useState(null)
   const [lastResult, setLastResult] = useState(null)
   const [showNoSetPopup, setShowNoSetPopup] = useState(false)
+  const [showHelp, setShowHelp] = useState(true)
 
   const init = useCallback(() => {
     const d = shuffle(generateDeck())
@@ -187,6 +188,7 @@ export default function SETGame({ onSidebarUpdate }) {
   }
 
   return (
+    <>
     <div style={{ maxWidth: "900px", margin: "0 auto" }}>
 
       {/* No SET popup */}
@@ -209,9 +211,9 @@ export default function SETGame({ onSidebarUpdate }) {
               color: "var(--text2)", fontSize: "0.95rem",
               marginBottom: "1.5rem", lineHeight: 1.6
             }}>
-              There are no valid SETs on the board right now.
-              Your score is safe — all unused cards from the board
-              and deck will be reshuffled and redealt.
+              There are no valid SETs on the board.
+              All unused cards from the board
+              and deck will be reshuffled and re-dealt.
             </p>
             <div style={{
               background: "var(--bg3)", border: "1px solid var(--border)",
@@ -263,6 +265,10 @@ export default function SETGame({ onSidebarUpdate }) {
             background: "var(--bg3)", color: "var(--text2)", border: "1px solid var(--border)",
             borderRadius: "8px", padding: "0.4rem 0.8rem", fontFamily: "var(--font-mono)", fontSize: "0.85rem"
           }}>New Game</button>
+          <button onClick={() => setShowHelp(true)} style={{
+            background: "var(--bg3)", color: "var(--cyan)", border: "1px solid var(--cyan)",
+            borderRadius: "8px", padding: "0.4rem 0.8rem", fontFamily: "var(--font-mono)", fontSize: "0.85rem"
+          }}>Rules + Symbols</button>
         </div>
       </div>
 
@@ -292,5 +298,57 @@ export default function SETGame({ onSidebarUpdate }) {
         Cards in deck: {deck.length} | Selected: {selected.length}/3
       </div>
     </div>
+
+    {/* Help Popup */}
+    {showHelp && (
+      <div style={{
+        position: "fixed", inset: 0, background: "#000b",
+        display: "flex", alignItems: "center", justifyContent: "center", zIndex: 300
+      }}>
+        <div style={{
+          background: "var(--bg2)", border: "1px solid var(--border)",
+          borderRadius: "14px", padding: "1.5rem", width: "90%",
+          maxWidth: "700px", maxHeight: "85vh", overflowY: "auto"
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+            <h2 style={{ color: "var(--gold)", fontFamily: "var(--font-display)" }}>SET Guide</h2>
+            <button onClick={() => setShowHelp(false)} style={{
+              background: "transparent", color: "var(--text2)", border: "none", fontSize: "1.2rem", cursor: "pointer"
+            }}>✕</button>
+          </div>
+          <div style={{ color: "var(--text2)", lineHeight: 1.7 }}>
+            <p>Each card has four attributes. A valid SET is three cards where each attribute is either all the same or all different across the three cards.</p>
+
+            <h3 style={{ color: "var(--cyan)", marginTop: "1rem" }}>Symbol Legend</h3>
+            <p>
+              Each card is described as <strong style={{ color: "var(--text)" }}>[number, color, shape, shading]</strong>, each valued 0, 1, or 2:
+            </p>
+            <p style={{ marginTop: "0.5rem" }}>
+              <strong style={{ color: "var(--text)" }}>Number:</strong> 0 = one symbol, 1 = two symbols, 2 = three symbols<br />
+              <strong style={{ color: "var(--red)" }}>Color:</strong> 0 = red, 1 = green, 2 = purple<br />
+              <strong style={{ color: "var(--text)" }}>Shape:</strong> 0 = ● circle, 1 = ▲ triangle, 2 = ■ square<br />
+              <strong style={{ color: "var(--text)" }}>Shading:</strong> 0 = filled, 1 = striped, 2 = empty outline
+            </p>
+
+            <h3 style={{ color: "var(--cyan)", marginTop: "1rem" }}>How To Play</h3>
+            <ul>
+              <li>Click 3 cards to select them.</li>
+              <li>If they form a valid SET, your score goes up and those cards are replaced from the deck.</li>
+              <li>If not, selection resets — try again.</li>
+              <li>Use <strong style={{ color: "#f97316" }}>Hint</strong> to highlight a valid SET in orange.</li>
+              <li>If no SET exists on the board, a reshuffle prompt appears automatically.</li>
+            </ul>
+
+            <h3 style={{ color: "var(--cyan)", marginTop: "1rem" }}>Group Theory Connection</h3>
+            <p>
+              A SET corresponds to a coset in (ℤ₃)⁴ which is the group of 4-tuples with values in ℤ₃ = &#123;0, 1, 2&#125; under addition mod 3.
+              Three cards will form a valid SET exactly when their attribute vector will sum to (0, 0, 0, 0) mod 3.
+              This means the three vectors will form a "line" in the affine geometry AG(4, 3).
+            </p>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   )
 }

@@ -15,6 +15,8 @@ export default function NimGame({ onSidebarUpdate }) {
   const [teachMode, setTeachMode] = useState(false)
   const [teachHint, setTeachHint] = useState(null)
   const [customPiles, setCustomPiles] = useState("3,5,7")
+  const [showHelp, setShowHelp] = useState(true)
+  const [difficulty, setDifficulty] = useState("medium")
 
   const xorValue = xorAll(piles)
   const isLosing = xorValue === 0
@@ -54,20 +56,30 @@ export default function NimGame({ onSidebarUpdate }) {
   useEffect(() => {
     if (currentPlayer !== "ai" || gameOver) return
     const timer = setTimeout(() => {
-      const move = nimOpt(piles)
-      let newPiles
+      const newPiles = [...piles]
       let explanation
 
-      if (!move) {
-        // AI is in losing position — make any valid move
-        const pileIdx = piles.findIndex(p => p > 0)
-        newPiles = [...piles]
-        newPiles[pileIdx] = newPiles[pileIdx] - 1
-        explanation = `AI is in a losing position — takes 1 from pile ${pileIdx + 1}`
+      const useOptimal =
+        difficulty === "hard" ||
+        (difficulty === "medium" && Math.random() < 0.5)
+
+      if (useOptimal) {
+        const move = nimOpt(piles)
+        if (move) {
+          newPiles[move.pileIndex] = piles[move.pileIndex] - move.removeAmount
+          explanation = `AI takes ${move.removeAmount} from pile ${move.pileIndex + 1} → XOR becomes 0`
+        } else {
+          const pileIdx = piles.findIndex(p => p > 0)
+          newPiles[pileIdx] -= 1
+          explanation = `AI is in a losing position — takes 1 from pile ${pileIdx + 1}`
+        }
       } else {
-        newPiles = [...piles]
-        newPiles[move.pileIndex] = piles[move.pileIndex] - move.removeAmount
-        explanation = `AI takes ${move.removeAmount} from pile ${move.pileIndex + 1} → XOR becomes 0`
+        // random valid move
+        const nonEmpty = piles.map((p, i) => p > 0 ? i : -1).filter(i => i >= 0)
+        const pileIdx = nonEmpty[Math.floor(Math.random() * nonEmpty.length)]
+        const amount = Math.ceil(Math.random() * piles[pileIdx])
+        newPiles[pileIdx] -= amount
+        explanation = `AI randomly takes ${amount} from pile ${pileIdx + 1}`
       }
 
       addLog(`AI: ${explanation}`)
@@ -80,7 +92,7 @@ export default function NimGame({ onSidebarUpdate }) {
       }
     }, 900)
     return () => clearTimeout(timer)
-  }, [currentPlayer, gameOver, piles, applyMove])
+  }, [currentPlayer, gameOver, piles, applyMove, difficulty])
 
   const handleTake = () => {
     if (selectedPile === null || takeAmount < 1 || takeAmount > piles[selectedPile]) {
@@ -103,7 +115,7 @@ export default function NimGame({ onSidebarUpdate }) {
   const handleTeachMe = () => {
     const move = nimOpt(piles)
     if (!move) {
-      setTeachHint("You're in a losing position — any move you make gives the AI a win with perfect play. Take 1 from any pile.")
+      setTeachHint("You're in a losing position, any move you make will give the AI a win with perfect play. Take 1 from any pile.")
     } else {
       setTeachHint(
         `Best move: take ${move.removeAmount} from pile ${move.pileIndex + 1}. ` +
@@ -131,6 +143,7 @@ export default function NimGame({ onSidebarUpdate }) {
   }
 
   return (
+    <>
     <div style={{ maxWidth: "700px", margin: "0 auto" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
         <div>
@@ -138,6 +151,18 @@ export default function NimGame({ onSidebarUpdate }) {
           <p style={{ color: "var(--text2)", fontSize: "0.9rem" }}>Take stones from piles. Last to take wins.</p>
         </div>
         <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+          {/* Difficulty */}
+          <div style={{ display: "flex", background: "var(--bg3)", borderRadius: "8px", border: "1px solid var(--border)", overflow: "hidden" }}>
+            {[["Easy", "var(--green)"], ["Medium", "var(--gold)"], ["Hard", "var(--red)"]].map(([level, color]) => (
+              <button key={level} onClick={() => setDifficulty(level.toLowerCase())} style={{
+                background: difficulty === level.toLowerCase() ? color : "transparent",
+                color: difficulty === level.toLowerCase() ? "#000" : "var(--text2)",
+                border: "none", padding: "0.35rem 0.65rem",
+                fontFamily: "var(--font-mono)", fontSize: "0.75rem", cursor: "pointer",
+                transition: "all 0.15s", fontWeight: difficulty === level.toLowerCase() ? "700" : "400"
+              }}>{level}</button>
+            ))}
+          </div>
           <input
             value={customPiles}
             onChange={e => setCustomPiles(e.target.value)}
@@ -152,6 +177,10 @@ export default function NimGame({ onSidebarUpdate }) {
             background: "var(--bg3)", color: "var(--text2)", border: "1px solid var(--border)",
             borderRadius: "8px", padding: "0.4rem 0.8rem", fontFamily: "var(--font-mono)", fontSize: "0.85rem"
           }}>New Game</button>
+          <button onClick={() => setShowHelp(true)} style={{
+            background: "var(--bg3)", color: "var(--cyan)", border: "1px solid var(--cyan)",
+            borderRadius: "8px", padding: "0.4rem 0.8rem", fontFamily: "var(--font-mono)", fontSize: "0.85rem"
+          }}>Rules + Symbols</button>
         </div>
       </div>
 
@@ -272,5 +301,57 @@ export default function NimGame({ onSidebarUpdate }) {
         </div>
       )}
     </div>
+
+    {/* Help Popup */}
+    {showHelp && (
+      <div style={{
+        position: "fixed", inset: 0, background: "#000b",
+        display: "flex", alignItems: "center", justifyContent: "center", zIndex: 300
+      }}>
+        <div style={{
+          background: "var(--bg2)", border: "1px solid var(--border)",
+          borderRadius: "14px", padding: "1.5rem", width: "90%",
+          maxWidth: "680px", maxHeight: "85vh", overflowY: "auto"
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+            <h2 style={{ color: "var(--gold)", fontFamily: "var(--font-display)" }}>Nim Guide</h2>
+            <button onClick={() => setShowHelp(false)} style={{
+              background: "transparent", color: "var(--text2)", border: "none", fontSize: "1.2rem", cursor: "pointer"
+            }}>✕</button>
+          </div>
+          <div style={{ color: "var(--text2)", lineHeight: 1.7 }}>
+            <p>Nim is a strategy game where players take turns removing stones from piles. The player who takes the last stone wins.</p>
+
+            <h3 style={{ color: "var(--cyan)", marginTop: "1rem" }}>How To Play</h3>
+            <ul>
+              <li>Select a pile by clicking on it.</li>
+              <li>Enter how many stones you want to take in which you need to take at least 1.</li>
+              <li>Press <strong>Take</strong> to make your move.</li>
+              <li>The AI will respond automatically.</li>
+              <li>Whoever takes the very last stone wins.</li>
+            </ul>
+
+            <h3 style={{ color: "var(--cyan)", marginTop: "1rem" }}>Symbol Legend</h3>
+            <p>
+              <strong style={{ color: "var(--text)" }}>XOR (⊕)</strong> — Bitwise exclusive-or of all pile sizes. The key to optimal strategy.<br />
+              <strong style={{ color: "var(--green)" }}>WINNING</strong> — XOR ≠ 0. A perfect move exists to force a win.<br />
+              <strong style={{ color: "var(--red)" }}>LOSING</strong> — XOR = 0. Any move gives the opponent a winning position.<br />
+              <strong style={{ color: "var(--cyan)" }}>Binary digits</strong> — Pile sizes shown in base-2 so XOR is computed column-by-column.
+            </p>
+
+            <h3 style={{ color: "var(--cyan)", marginTop: "1rem" }}>Group Theory Connection</h3>
+            <p>
+              Nim strategy is rooted within the group (ℤ₂)ⁿ which is the set of binary strings of length n under bitwise XOR.
+              Each pile's size is an element with the composition being XOR. The identity is 0 (all zeros), and every element is
+              its own inverse. A position will be losing exactly when the XOR of all pile sizes is the identity element.
+            </p>
+            <p style={{ marginTop: "0.5rem" }}>
+              Use the <strong style={{ color: "var(--cyan)" }}>Teach Me</strong> button mid-game to see the optimal move explained in terms of XOR.
+            </p>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   )
 }

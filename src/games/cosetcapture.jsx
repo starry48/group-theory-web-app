@@ -33,6 +33,8 @@ export default function CosetCapture({ onSidebarUpdate }) {
   const [message, setMessage] = useState("")
   const [gameOver, setGameOver] = useState(false)
   const [cosetMap, setCosetMap] = useState({})
+  const [showHelp, setShowHelp] = useState(true)
+  const [difficulty, setDifficulty] = useState("medium")
 
   const getConfig = useCallback(() => {
     if (groupMode === "Z12") {
@@ -152,10 +154,34 @@ export default function CosetCapture({ onSidebarUpdate }) {
   const aiTurn = useCallback((pHand, oHand) => {
     if (oHand.length === 0) return
     setTimeout(() => {
-      // AI plays first card from hand
-      const card = oHand[0]
+      const strategic =
+        difficulty === "hard" ||
+        (difficulty === "medium" && Math.random() < 0.5)
+
+      let card
+      if (strategic) {
+        // continue collecting current coset if possible
+        if (opponentCollecting.length > 0) {
+          const targetCoset = cosetMap[String(opponentCollecting[0].value)]
+          const matching = oHand.filter(c => cosetMap[String(c.value)] === targetCoset)
+          if (matching.length > 0) card = matching[0]
+        }
+        // otherwise pick from the coset most represented in hand
+        if (!card) {
+          const counts = {}
+          oHand.forEach(c => {
+            const ci = cosetMap[String(c.value)]
+            counts[ci] = (counts[ci] || 0) + 1
+          })
+          const bestCoset = Number(Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0])
+          card = oHand.find(c => cosetMap[String(c.value)] === bestCoset) || oHand[0]
+        }
+      } else {
+        card = oHand[Math.floor(Math.random() * oHand.length)]
+      }
+
       const cosetIdx = cosetMap[String(card.value)]
-      const newOHand = oHand.slice(1)
+      const newOHand = oHand.filter(c => c !== card)
       setOpponentHand(newOHand)
       const newOCollecting = [...opponentCollecting, card]
       const allSame = newOCollecting.every(c => cosetMap[String(c.value)] === cosetIdx)
@@ -174,7 +200,7 @@ export default function CosetCapture({ onSidebarUpdate }) {
         setOpponentCollecting(newOCollecting)
       }
     }, 600)
-  }, [cosetMap, cosets, opponentCollecting, opponentScore, playerScore])
+  }, [cosetMap, cosets, opponentCollecting, opponentScore, playerScore, difficulty])
 
   const endGame = (pScore, oScore) => {
     setGameOver(true)
@@ -187,6 +213,7 @@ export default function CosetCapture({ onSidebarUpdate }) {
   const subgroupOptions = config.subgroups
 
   return (
+    <>
     <div style={{ maxWidth: "800px", margin: "0 auto" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
         <div>
@@ -194,6 +221,18 @@ export default function CosetCapture({ onSidebarUpdate }) {
           <p style={{ color: "var(--text2)", fontSize: "0.9rem" }}>Collect complete cosets of the subgroup</p>
         </div>
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          {/* Difficulty */}
+          <div style={{ display: "flex", background: "var(--bg3)", borderRadius: "8px", border: "1px solid var(--border)", overflow: "hidden" }}>
+            {[["Easy", "var(--green)"], ["Medium", "var(--gold)"], ["Hard", "var(--red)"]].map(([level, color]) => (
+              <button key={level} onClick={() => setDifficulty(level.toLowerCase())} style={{
+                background: difficulty === level.toLowerCase() ? color : "transparent",
+                color: difficulty === level.toLowerCase() ? "#000" : "var(--text2)",
+                border: "none", padding: "0.35rem 0.65rem",
+                fontFamily: "var(--font-mono)", fontSize: "0.75rem", cursor: "pointer",
+                transition: "all 0.15s", fontWeight: difficulty === level.toLowerCase() ? "700" : "400"
+              }}>{level}</button>
+            ))}
+          </div>
           <button onClick={() => setGroupMode(m => m === "Z12" ? "D4" : "Z12")} style={{
             background: "var(--bg3)", color: "var(--cyan)", border: "1px solid var(--cyan)",
             borderRadius: "8px", padding: "0.4rem 0.8rem", fontFamily: "var(--font-mono)", fontSize: "0.8rem"
@@ -202,6 +241,10 @@ export default function CosetCapture({ onSidebarUpdate }) {
             background: "var(--bg3)", color: "var(--text2)", border: "1px solid var(--border)",
             borderRadius: "8px", padding: "0.4rem 0.8rem", fontFamily: "var(--font-mono)", fontSize: "0.85rem"
           }}>New Game</button>
+          <button onClick={() => setShowHelp(true)} style={{
+            background: "var(--bg3)", color: "var(--cyan)", border: "1px solid var(--cyan)",
+            borderRadius: "8px", padding: "0.4rem 0.8rem", fontFamily: "var(--font-mono)", fontSize: "0.85rem"
+          }}>Rules + Symbols</button>
         </div>
       </div>
 
@@ -318,5 +361,55 @@ export default function CosetCapture({ onSidebarUpdate }) {
         </div>
       </div>
     </div>
+
+    {/* Help Popup */}
+    {showHelp && (
+      <div style={{
+        position: "fixed", inset: 0, background: "#000b",
+        display: "flex", alignItems: "center", justifyContent: "center", zIndex: 300
+      }}>
+        <div style={{
+          background: "var(--bg2)", border: "1px solid var(--border)",
+          borderRadius: "14px", padding: "1.5rem", width: "90%",
+          maxWidth: "700px", maxHeight: "85vh", overflowY: "auto"
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+            <h2 style={{ color: "var(--gold)", fontFamily: "var(--font-display)" }}>Coset Capture Guide</h2>
+            <button onClick={() => setShowHelp(false)} style={{
+              background: "transparent", color: "var(--text2)", border: "none", fontSize: "1.2rem", cursor: "pointer"
+            }}>✕</button>
+          </div>
+          <div style={{ color: "var(--text2)", lineHeight: 1.7 }}>
+            <p>Collect cards that belong to the same coset of the chosen subgroup before your opponent does.</p>
+
+            <h3 style={{ color: "var(--cyan)", marginTop: "1rem" }}>Symbol Legend</h3>
+            <p>
+              <strong style={{ color: "var(--text)" }}>H</strong> — The chosen subgroup. Its elements are shown in the subgroup selector.<br />
+              <strong style={{ color: "var(--text)" }}>Coset i</strong> — A partition class of the group. Cards are color-coded by their coset.<br />
+              <strong style={{ color: "var(--text)" }}>ℤ₁₂</strong> — The integers mod 12 under addition. Elements are 0–11.<br />
+              <strong style={{ color: "var(--text)" }}>D₄</strong> — The dihedral group of symmetries of a square. Elements are rotations (r⁰…r³) and reflections (s, sr, sr², sr³).
+            </p>
+
+            <h3 style={{ color: "var(--cyan)", marginTop: "1rem" }}>How To Play</h3>
+            <ul>
+              <li>Pick a subgroup H from the selector at the top.</li>
+              <li>Click cards from your hand to play them, the cards are color-coded by their coset.</li>
+              <li>Collect all elements of a single coset to score a point.</li>
+              <li>Playing a card from the wrong coset discards your current collection.</li>
+              <li>The player with the most complete cosets when all cards are played wins.</li>
+            </ul>
+
+            <h3 style={{ color: "var(--cyan)", marginTop: "1rem" }}>Group Theory Connection</h3>
+            <p>
+              A coset of subgroup H in group G is a set of the form g + H = &#123; g + h : h ∈ H &#125; for some element g.
+              By Lagrange's theorem, the cosets partition G into equal-sized parts, which is why the sidebar
+              shows the equation |G| = |H| × (number of cosets). Collecting a coset means you've identified
+              one of the complete equivalence class in the quotient structure G/H.
+            </p>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   )
 }
