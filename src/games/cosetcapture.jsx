@@ -20,6 +20,21 @@ function shuffle(arr) {
   return a
 }
 
+// Returns true if the given hand contains all elements needed to complete
+// at least one full coset (accounting for cards already being collected).
+function canCompleteAnyCoset(hand, collecting, cosets, map) {
+  // For each coset, check if hand + collecting together cover the whole coset
+  for (let i = 0; i < cosets.length; i++) {
+    const coset = cosets[i]
+    const have = new Set([
+      ...collecting.filter(c => map[String(c.value)] === i).map(c => String(c.value)),
+      ...hand.filter(c => map[String(c.value)] === i).map(c => String(c.value))
+    ])
+    if (coset.every(e => have.has(String(e)))) return true
+  }
+  return false
+}
+
 export default function CosetCapture({ onSidebarUpdate }) {
   const [groupMode, setGroupMode] = useState("Z12")
   const [subgroupIndex, setSubgroupIndex] = useState(0)
@@ -34,6 +49,8 @@ export default function CosetCapture({ onSidebarUpdate }) {
   const [cosetMap, setCosetMap] = useState({})
   const [showHelp, setShowHelp] = useState(true)
   const [difficulty, setDifficulty] = useState("medium")
+  // "player" | "ai" — only the active turn's player can act
+  const [turn, setTurn] = useState("player")
 
   // Refs so the AI callback always reads fresh state without stale closures
   const cosetsRef = useRef([])
@@ -44,10 +61,17 @@ export default function CosetCapture({ onSidebarUpdate }) {
   const difficultyRef = useRef("medium")
   const gameOverRef = useRef(false)
   const opponentHandRef = useRef([])
+  const playerHandRef = useRef([])
+  const playerCollectingRef = useRef([])
+  const turnRef = useRef("player")
 
+  const syncTurn = (val) => { turnRef.current = val; setTurn(val) }
   const syncOpponentCollecting = (val) => { opponentCollectingRef.current = val }
   const syncOpponentScore = (val) => { opponentScoreRef.current = val; setOpponentScore(val) }
   const syncPlayerScore = (val) => { playerScoreRef.current = val; setPlayerScore(val) }
+  const syncPlayerCollecting = (val) => { playerCollectingRef.current = val; setPlayerCollecting(val) }
+  const syncPlayerHand = (val) => { playerHandRef.current = val; setPlayerHand(val) }
+  const syncOpponentHand = (val) => { opponentHandRef.current = val; setOpponentHand(val) }
 
   useEffect(() => { difficultyRef.current = difficulty }, [difficulty])
 
@@ -83,17 +107,17 @@ export default function CosetCapture({ onSidebarUpdate }) {
     const mid = Math.floor(allCards.length / 2)
     const pHand = allCards.slice(0, mid)
     const oHand = allCards.slice(mid)
-    setPlayerHand(pHand)
-    setOpponentHand(oHand)
-    opponentHandRef.current = oHand
+    syncPlayerHand(pHand)
+    syncOpponentHand(oHand)
 
-    setPlayerCollecting([])
+    syncPlayerCollecting([])
     syncOpponentCollecting([])
     syncPlayerScore(0)
     syncOpponentScore(0)
     gameOverRef.current = false
     setGameOver(false)
-    setMessage("Collect cards from the same coset to score! Click a card to play it.")
+    syncTurn("player")
+    setMessage("Your turn — collect cards from the same coset to score!")
 
     onSidebarUpdate({
       group: groupMode,
@@ -113,12 +137,44 @@ export default function CosetCapture({ onSidebarUpdate }) {
     else setMessage(`It's a tie! ${pScore} cosets each.`)
   }, [])
 
-  // AI reads everything from refs — no stale closure issues
+  // Check if neither player can complete any coset with their current cards.
+  // If so, pool all unscored cards, reshuffle, and redistribute.
+  const checkAndResolveDeadlock = useCallback((pHand, oHand, pCollecting, oCollecting) => {
+    const map = cosetMapRef.current
+    const cs = cosetsRef.current
+
+    const playerStuck = !canCompleteAnyCoset(pHand, pCollecting, cs, map)
+    const aiStuck = !canCompleteAnyCoset(oHand, oCollecting, cs, map)
+
+    if (!playerStuck || !aiStuck) return false // at least one can still score
+
+    // Both stuck — pool and redistribute
+    const pool = shuffle([...pHand, ...oHand, ...pCollecting, ...oCollecting])
+    if (pool.length === 0) return false
+
+    const mid = Math.floor(pool.length / 2)
+    const newPHand = pool.slice(0, mid)
+    const newOHand = pool.slice(mid)
+
+    syncPlayerHand(newPHand)
+    syncOpponentHand(newOHand)
+    syncPlayerCollecting([])
+    syncOpponentCollecting([])
+    setMessage("⟳ Deadlock — neither player could complete a coset. Cards reshuffled!")
+    return true
+  }, [])
+
+  // ── AI TURN ──────────────────────────────────────────────────────────────
   const aiTurn = useCallback((pHand, oHand) => {
-    if (oHand.length === 0 || gameOverRef.current) return
+    if (oHand.length === 0 || gameOverRef.current) {
+      syncTurn("player")
+      setMessage("Your turn.")
+      return
+    }
 
     setTimeout(() => {
       if (gameOverRef.current) return
+
       const diff = difficultyRef.current
       const map = cosetMapRef.current
       const cs = cosetsRef.current
@@ -127,7 +183,6 @@ export default function CosetCapture({ onSidebarUpdate }) {
       let card = null
 
       if (diff === "hard") {
-        // Always continue current coset if possible; else pick coset best represented in hand
         if (oc.length > 0) {
           const target = map[String(oc[0].value)]
           const matching = oHand.filter(c => map[String(c.value)] === target)
@@ -139,9 +194,7 @@ export default function CosetCapture({ onSidebarUpdate }) {
           const bestCoset = Number(Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0])
           card = oHand.find(c => map[String(c.value)] === bestCoset) || oHand[0]
         }
-
       } else if (diff === "medium") {
-        // Strategic 60% of the time
         if (Math.random() < 0.6) {
           if (oc.length > 0) {
             const target = map[String(oc[0].value)]
@@ -157,9 +210,8 @@ export default function CosetCapture({ onSidebarUpdate }) {
         } else {
           card = oHand[Math.floor(Math.random() * oHand.length)]
         }
-
       } else {
-        // Easy: 30% chance to deliberately play the wrong coset (self-sabotage)
+        // Easy: 30% chance to deliberately mis-play
         if (oc.length > 0 && Math.random() < 0.3) {
           const target = map[String(oc[0].value)]
           const wrong = oHand.filter(c => map[String(c.value)] !== target)
@@ -171,70 +223,94 @@ export default function CosetCapture({ onSidebarUpdate }) {
         }
       }
 
-      if (!card) return
+      if (!card) { syncTurn("player"); setMessage("Your turn."); return }
 
       const cosetIdx = map[String(card.value)]
       const newOHand = oHand.filter(c => c !== card)
-      setOpponentHand(newOHand)
-      opponentHandRef.current = newOHand
+      syncOpponentHand(newOHand)
 
       const newOCollecting = [...oc, card]
       const allSame = newOCollecting.every(c => map[String(c.value)] === cosetIdx)
 
-      if (!allSame) {
-        syncOpponentCollecting([])
-        return
-      }
+      let finalOCollecting = newOCollecting
 
-      if (newOCollecting.length === cs[cosetIdx]?.length) {
+      if (!allSame) {
+        // AI mis-played — discard its collection
+        syncOpponentCollecting([])
+        finalOCollecting = []
+      } else if (newOCollecting.length === cs[cosetIdx]?.length) {
+        // AI completed a coset
         const newScore = opponentScoreRef.current + 1
         syncOpponentScore(newScore)
         syncOpponentCollecting([])
+        finalOCollecting = []
+
         if (pHand.length === 0 && newOHand.length === 0) {
           endGame(playerScoreRef.current, newScore)
+          return
         }
       } else {
         syncOpponentCollecting(newOCollecting)
       }
-    }, 600)
-  }, [endGame])
 
+      // Check for deadlock before handing back to player
+      const deadlocked = checkAndResolveDeadlock(
+        pHand, newOHand,
+        playerCollectingRef.current, finalOCollecting
+      )
+
+      syncTurn("player")
+      if (!deadlocked) setMessage("Your turn.")
+    }, 800)
+  }, [endGame, checkAndResolveDeadlock])
+
+  // ── PLAYER TURN ───────────────────────────────────────────────────────────
   const handlePlayCard = (card, idx) => {
-    if (gameOver) return
+    if (gameOver || turnRef.current !== "player") return
+
     const map = cosetMapRef.current
     const cs = cosetsRef.current
     const cosetIdx = map[String(card.value)]
-    const newCollecting = [...playerCollecting, card]
-    const newHand = playerHand.filter((_, i) => i !== idx)
-    setPlayerHand(newHand)
+    const newCollecting = [...playerCollectingRef.current, card]
+    const newHand = playerHandRef.current.filter((_, i) => i !== idx)
+    syncPlayerHand(newHand)
 
     const allSameCoset = newCollecting.every(c => map[String(c.value)] === cosetIdx)
+
     if (!allSameCoset) {
-      setMessage("Those cards don't share a coset — collecting discarded.")
-      setPlayerCollecting([])
+      // Player mis-played — discard and pass turn
+      setMessage("Those cards don't share a coset — collection discarded. AI's turn...")
+      syncPlayerCollecting([])
+      syncTurn("ai")
       aiTurn(newHand, opponentHandRef.current)
       return
     }
 
     if (newCollecting.length === cs[cosetIdx]?.length) {
+      // Player completed a coset
       const newScore = playerScoreRef.current + 1
       syncPlayerScore(newScore)
-      setPlayerCollecting([])
-      setMessage(`✓ Coset collected! Score: ${newScore}`)
+      syncPlayerCollecting([])
+      setMessage(`✓ Coset collected! Score: ${newScore}. AI's turn...`)
+
       if (newHand.length === 0 && opponentHandRef.current.length === 0) {
         endGame(newScore, opponentScoreRef.current)
         return
       }
-    } else {
-      setPlayerCollecting(newCollecting)
-      setMessage(`Collecting coset ${cosetIdx} (${newCollecting.length}/${cs[cosetIdx]?.length || "?"}). Keep going or switch.`)
-    }
 
-    aiTurn(newHand, opponentHandRef.current)
+      // Pass turn to AI
+      syncTurn("ai")
+      aiTurn(newHand, opponentHandRef.current)
+    } else {
+      // Still collecting — stay on player's turn, no AI move yet
+      syncPlayerCollecting(newCollecting)
+      setMessage(`Collecting coset ${cosetIdx} (${newCollecting.length}/${cs[cosetIdx]?.length || "?"}). Keep going or play a different coset's card to discard and pass.`)
+    }
   }
 
   const config = getConfig()
   const subgroupOptions = config.subgroups
+  const isPlayerTurn = turn === "player" && !gameOver
 
   return (
     <>
@@ -315,15 +391,28 @@ export default function CosetCapture({ onSidebarUpdate }) {
         </div>
       </div>
 
-      {/* Difficulty indicator */}
-      <div style={{ marginBottom: "0.75rem", fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--text2)" }}>
-        AI:&nbsp;
-        <span style={{ color: difficulty === "easy" ? "var(--green)" : difficulty === "medium" ? "var(--gold)" : "var(--red)", fontWeight: 700 }}>
-          {difficulty.toUpperCase()}
-        </span>
-        {difficulty === "easy" && " — plays randomly, sometimes sabotages itself"}
-        {difficulty === "medium" && " — strategic 60% of turns, random 40%"}
-        {difficulty === "hard" && " — always plays optimally"}
+      {/* AI difficulty + turn indicator row */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
+        <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--text2)" }}>
+          AI:&nbsp;
+          <span style={{ color: difficulty === "easy" ? "var(--green)" : difficulty === "medium" ? "var(--gold)" : "var(--red)", fontWeight: 700 }}>
+            {difficulty.toUpperCase()}
+          </span>
+          {difficulty === "easy" && " — random, sometimes self-sabotages"}
+          {difficulty === "medium" && " — strategic 60%, random 40%"}
+          {difficulty === "hard" && " — always optimal"}
+        </div>
+        {!gameOver && (
+          <div style={{
+            fontFamily: "var(--font-mono)", fontSize: "0.75rem", fontWeight: 700,
+            color: turn === "player" ? "var(--gold)" : "var(--cyan)",
+            background: turn === "player" ? "var(--gold)22" : "var(--cyan)22",
+            border: `1px solid ${turn === "player" ? "var(--gold)" : "var(--cyan)"}`,
+            padding: "0.2rem 0.6rem", borderRadius: "20px"
+          }}>
+            {turn === "player" ? "● YOUR TURN" : "○ AI THINKING..."}
+          </div>
+        )}
       </div>
 
       {/* Scores */}
@@ -339,7 +428,7 @@ export default function CosetCapture({ onSidebarUpdate }) {
         ))}
       </div>
 
-      {/* Status */}
+      {/* Status message */}
       <div style={{
         padding: "0.6rem 1rem", background: "var(--bg3)", borderRadius: "8px", marginBottom: "1.25rem",
         border: `1px solid ${gameOver ? "var(--gold)" : "var(--border)"}`,
@@ -366,8 +455,8 @@ export default function CosetCapture({ onSidebarUpdate }) {
 
       {/* Player hand */}
       <div>
-        <div style={{ fontFamily: "var(--font-mono)", color: "var(--gold)", fontSize: "0.7rem", marginBottom: "0.5rem" }}>
-          YOUR HAND — click to play
+        <div style={{ fontFamily: "var(--font-mono)", color: isPlayerTurn ? "var(--gold)" : "var(--text2)", fontSize: "0.7rem", marginBottom: "0.5rem" }}>
+          YOUR HAND {isPlayerTurn ? "— click to play" : "— waiting for AI..."}
         </div>
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
           {playerHand.map((card, i) => {
@@ -375,9 +464,12 @@ export default function CosetCapture({ onSidebarUpdate }) {
             const color = COSET_COLORS[cosetIdx % COSET_COLORS.length]
             return (
               <div key={i} onClick={() => handlePlayCard(card, i)} style={{
-                background: "var(--card-bg)", border: `2px solid ${color}`,
+                background: "var(--card-bg)",
+                border: `2px solid ${color}`,
                 borderRadius: "8px", padding: "0.5rem 0.75rem",
-                cursor: "pointer", transition: "all 0.15s",
+                cursor: isPlayerTurn ? "pointer" : "not-allowed",
+                opacity: isPlayerTurn ? 1 : 0.45,
+                transition: "all 0.15s",
                 fontFamily: "var(--font-mono)", fontSize: "1rem",
                 color, minWidth: "44px", textAlign: "center"
               }}>{card.label}</div>
@@ -399,6 +491,16 @@ export default function CosetCapture({ onSidebarUpdate }) {
           </div>
           <div style={{ color: "var(--text2)", lineHeight: 1.7 }}>
             <p>Collect cards that belong to the same coset of the chosen subgroup before your opponent does.</p>
+            <h3 style={{ color: "var(--cyan)", marginTop: "1rem" }}>Turns</h3>
+            <p>
+              You and the AI strictly alternate turns. You play one card per turn.
+              If you're mid-collection and play a card from a different coset, your coset collection is discarded and the turn passes to the AI.
+              The turn indicator at the top right shows whose move it is.
+            </p>
+            <h3 style={{ color: "var(--cyan)", marginTop: "1rem" }}>Deadlock</h3>
+            <p>
+              If neither player can complete any coset with their current cards, all unscored cards are reshuffled, and redistributed automatically.
+            </p>
             <h3 style={{ color: "var(--cyan)", marginTop: "1rem" }}>Difficulty</h3>
             <p>
               <strong style={{ color: "var(--green)" }}>Easy</strong> — AI plays randomly and sometimes deliberately mis-plays.<br />
@@ -408,10 +510,10 @@ export default function CosetCapture({ onSidebarUpdate }) {
             <h3 style={{ color: "var(--cyan)", marginTop: "1rem" }}>How To Play</h3>
             <ul>
               <li>Pick a subgroup H from the selector at the top.</li>
-              <li>Click cards from your hand — color-coded by coset.</li>
+              <li>Click cards from your hand, each card is color-coded by coset.</li>
               <li>Collect all elements of a single coset to score a point.</li>
-              <li>Playing a wrong-coset card discards your current collection.</li>
-              <li>Most complete cosets when all cards are played wins.</li>
+              <li>Playing the wrong-coset card discards your collection and passes the turn.</li>
+              <li>Most complete cosets wins.</li>
             </ul>
             <h3 style={{ color: "var(--cyan)", marginTop: "1rem" }}>Group Theory Connection</h3>
             <p>A coset of H in G is gH = &#123; g★h : h ∈ H &#125;. By Lagrange's theorem the cosets partition G into equal-sized parts: |G| = |H| × (number of cosets).</p>
